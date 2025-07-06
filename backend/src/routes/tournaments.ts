@@ -98,7 +98,7 @@ router.post('/', upload.single('pbnFile'), async (req, res) => {
     const existingTournaments = await prisma.tournament.findMany({
       select: { id: true }
     });
-    const existingSlugs = existingTournaments.map(t => t.id);
+    const existingSlugs = existingTournaments.map((t: { id: string }) => t.id);
     const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs);
 
     // Create tournament

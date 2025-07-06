@@ -99,7 +99,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Check access permissions
-    const isMember = circle.members.some(member => member.userId === userId);
+    const isMember = circle.members.some((member: { userId: string }) => member.userId === userId);
     const isCreator = circle.createdBy === userId;
 
     if (!circle.isPublic && !isMember && !isCreator) {
@@ -132,7 +132,7 @@ router.post('/', async (req, res) => {
     const existingCircles = await prisma.circle.findMany({
       select: { id: true }
     });
-    const existingSlugs = existingCircles.map(c => c.id);
+    const existingSlugs = existingCircles.map((c: { id: string }) => c.id);
     const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs);
 
     const circle = await prisma.circle.create({
@@ -719,7 +719,7 @@ router.post('/:id/invite', async (req, res) => {
     }
 
     const isCreator = circle.createdBy === userId;
-    const isAdmin = circle.members.some(m => m.role === 'ADMIN');
+    const isAdmin = circle.members.some((m: { role: string }) => m.role === 'ADMIN');
 
     if (!isCreator && !isAdmin) {
       return res.status(403).json({ error: 'Only circle creator or admin can send invitations' });
@@ -804,7 +804,7 @@ router.get('/:id/invitations', async (req, res) => {
     }
 
     const isCreator = circle.createdBy === userId;
-    const isAdmin = circle.members.some(m => m.role === 'ADMIN');
+    const isAdmin = circle.members.some((m: { role: string }) => m.role === 'ADMIN');
 
     if (!isCreator && !isAdmin) {
       return res.status(403).json({ error: 'Only circle creator or admin can view invitations' });
