@@ -23,13 +23,13 @@ mkdir -p backend/uploads/tournaments
 echo "🛑 Stopping existing processes..."
 pm2 stop ecosystem.config.js 2>/dev/null || echo "No existing processes to stop"
 
-# Install dependencies and build
-echo "📦 Installing dependencies and building..."
-npm run build:prod
-
 # Create symlink for backend .env
 echo "🔗 Creating environment symlink..."
 ln -sf ../.env backend/.env
+
+# Install dependencies and build
+echo "📦 Installing dependencies and building..."
+npm run build:prod
 
 # Set up production database
 echo "🗄️ Setting up production database..."
