@@ -27,6 +27,10 @@ pm2 stop ecosystem.config.js 2>/dev/null || echo "No existing processes to stop"
 echo "📦 Installing dependencies and building..."
 npm run build:prod
 
+# Create symlink for backend .env
+echo "🔗 Creating environment symlink..."
+ln -sf ../.env backend/.env
+
 # Set up production database
 echo "🗄️ Setting up production database..."
 cd backend

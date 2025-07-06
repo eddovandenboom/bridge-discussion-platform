@@ -8,7 +8,7 @@ import authRoutes from './routes/auth'
 import tournamentRoutes from './routes/tournaments'
 import circleRoutes from './routes/circles'
 
-dotenv.config()
+dotenv.config({ path: path.join(__dirname, '../../.env') })
 
 const app = express()
 const PORT = process.env.PORT || 3001
