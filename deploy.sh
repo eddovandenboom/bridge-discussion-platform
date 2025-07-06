@@ -31,13 +31,13 @@ npm run build:prod
 echo "🗄️ Setting up production database..."
 cd backend
 DATABASE_URL="file:./prisma/prod.db" npx prisma db push
-DATABASE_URL="file:./prisma/prod.db" node prisma/seed.js
+#DATABASE_URL="file:./prisma/prod.db" node prisma/seed.js
 cd ..
 
 # Copy environment file if it doesn't exist
 if [ ! -f .env ]; then
     echo "📝 Creating production environment file..."
-    cp .env.production .env
+    cp .env.example .env
     echo "⚠️  IMPORTANT: Edit .env file and set a secure SESSION_SECRET!"
 fi
 
