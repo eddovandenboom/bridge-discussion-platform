@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { generateCircleSlug, generateUniqueSlug } from '../utils/slug';
+import type { DatabaseError } from '../types/express';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -23,7 +24,7 @@ router.use((req, res, next) => {
 // Get all circles (public ones for non-members, all for members)
 router.get('/', async (req, res) => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       // Not logged in - only show public circles
@@ -68,7 +69,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     const circle = await prisma.circle.findUnique({
       where: { id },
@@ -115,7 +116,7 @@ router.get('/:id', async (req, res) => {
 // Create new circle
 router.post('/', async (req, res) => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -166,7 +167,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
     const { name, description, isPublic } = req.body;
 
     if (!userId) {
@@ -211,7 +212,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -243,7 +244,7 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/join', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -288,7 +289,7 @@ router.post('/:id/join', async (req, res) => {
 router.post('/:id/leave', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -329,7 +330,7 @@ router.post('/:id/leave', async (req, res) => {
 router.delete('/:id/members/:userId', async (req, res) => {
   try {
     const { id, userId: targetUserId } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -374,7 +375,7 @@ router.delete('/:id/members/:userId', async (req, res) => {
 router.get('/:id/tournaments/:tournamentId', async (req, res) => {
   try {
     const { id: circleId, tournamentId } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     // Check if circle exists and user has access
     const circle = await prisma.circle.findUnique({
@@ -447,7 +448,7 @@ router.post('/:id/tournaments/:tournamentId/comments', async (req, res) => {
   try {
     const { id: circleId, tournamentId } = req.params;
     const { content, boardNumber, parentCommentId } = req.body;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -538,7 +539,7 @@ router.put('/:id/tournaments/:tournamentId/comments/:commentId', async (req, res
   try {
     const { id: circleId, tournamentId, commentId } = req.params;
     const { content } = req.body;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -587,7 +588,7 @@ router.put('/:id/tournaments/:tournamentId/comments/:commentId', async (req, res
 router.delete('/:id/tournaments/:tournamentId/comments/:commentId', async (req, res) => {
   try {
     const { id: circleId, tournamentId, commentId } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -636,7 +637,7 @@ router.put('/:id/members/:userId/role', async (req, res) => {
   try {
     const { id, userId: targetUserId } = req.params;
     const { role } = req.body;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -679,8 +680,8 @@ router.put('/:id/members/:userId/role', async (req, res) => {
     });
 
     res.json(updatedMember);
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
       return res.status(404).json({ error: 'Member not found in this circle' });
     }
     console.error('Error updating member role:', error);
@@ -693,7 +694,7 @@ router.post('/:id/invite', async (req, res) => {
   try {
     const { id } = req.params;
     const { email } = req.body;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -782,7 +783,7 @@ router.post('/:id/invite', async (req, res) => {
 router.get('/:id/invitations', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -834,7 +835,7 @@ router.get('/:id/invitations', async (req, res) => {
 router.post('/invitations/:invitationId/accept', async (req, res) => {
   try {
     const { invitationId } = req.params;
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -913,7 +914,7 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
 // Get user's pending invitations
 router.get('/invitations/pending', async (req, res) => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });

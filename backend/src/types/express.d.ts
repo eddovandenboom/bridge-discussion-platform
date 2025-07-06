@@ -7,7 +7,16 @@ declare global {
       role: string;
       createdAt: Date;
     }
+    
+    interface Request {
+      user?: User;
+    }
   }
+}
+
+export interface DatabaseError extends Error {
+  code?: string;
+  meta?: any;
 }
 
 export {};

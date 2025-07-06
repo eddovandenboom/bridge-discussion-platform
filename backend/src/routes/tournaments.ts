@@ -56,7 +56,7 @@ const upload = multer({
 // Create new tournament with PBN file upload
 router.post('/', upload.single('pbnFile'), async (req, res) => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -135,7 +135,7 @@ router.post('/', upload.single('pbnFile'), async (req, res) => {
               } 
             }
           }
-        });
+        }) as { members: any[]; createdBy: string } | null;
 
         const isAdmin = circle?.members ? circle.members.length > 0 : false;
         const isCreator = circle?.createdBy === userId;
