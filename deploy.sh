@@ -35,13 +35,13 @@ ln -sf ../.env backend/.env
 echo "🗄️ Setting up production database..."
 cd backend
 npm run db:push:prod
-npm run db:seed:prod
+# npm run db:seed:prod
 cd ..
 
 # Copy environment file if it doesn't exist
 if [ ! -f .env ]; then
     echo "📝 Creating production environment file..."
-    cp .env.production .env
+    cp .env.example .env
     echo "⚠️  IMPORTANT: Edit .env file and set a secure SESSION_SECRET!"
 fi
 
