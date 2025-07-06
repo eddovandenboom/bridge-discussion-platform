@@ -31,7 +31,7 @@ export default function BridgeHandViewer({
   }, [onBoardChange])
   
   // Generate the iframe URL directly to ddummy.htm with PBN file parameter
-  const iframeUrl = `http://localhost:3002/bsol/ddummy.htm?file=${encodeURIComponent(pbnFileUrl)}`
+  const iframeUrl = `${import.meta.env.VITE_VIEWER_URL || 'http://localhost:3002'}/bsol/ddummy.htm?file=${encodeURIComponent(pbnFileUrl)}`
   
   return (
     <div className={`bridge-hand-viewer ${className}`}>
