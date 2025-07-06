@@ -21,7 +21,7 @@ mkdir -p backend/uploads/tournaments
 
 # Stop existing PM2 processes (if any)
 echo "🛑 Stopping existing processes..."
-pm2 stop ecosystem.config.js 2>/dev/null || echo "No existing processes to stop"
+pm2 delete ecosystem.config.js 2>/dev/null || echo "No existing processes to stop"
 
 # Create symlink for backend .env
 echo "🔗 Creating environment symlink..."
