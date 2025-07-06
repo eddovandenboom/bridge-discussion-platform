@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                String              @id @default(cuid())
+  username          String              @unique
+  email             String              @unique
+  password          String
+  role              String              @default("USER")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  createdCircles    Circle[]            @relation("CircleCreator")
+  circleMembers     CircleMember[]
+  uploadedTournaments Tournament[]      @relation("TournamentUploader")
+  comments          Comment[]
+  sharedTournaments TournamentCircle[]  @relation("TournamentSharer")
+  sentInvitations   CircleInvitation[]  @relation("CircleInviter")
+  receivedInvitations CircleInvitation[] @relation("CircleInvitee")
+}
+
+model Circle {
+  id                String              @id
+  name              String
+  description       String?
+  isPublic          Boolean             @default(false)
+  createdBy         String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  creator           User                @relation("CircleCreator", fields: [createdBy], references: [id])
+  members           CircleMember[]
+  tournaments       TournamentCircle[]
+  comments          Comment[]
+  invitations       CircleInvitation[]
+}
+
+model CircleMember {
+  circleId          String
+  userId            String
+  role              String              @default("MEMBER") // MEMBER, ADMIN
+  joinedAt          DateTime            @default(now())
+  
+  // Relations
+  circle            Circle              @relation(fields: [circleId], references: [id])
+  user              User                @relation(fields: [userId], references: [id])
+  
+  @@id([circleId, userId])
+}
+
+model Tournament {
+  id                String              @id
+  name              String
+  date              DateTime
+  venue             String?
+  filename          String              // PBN file path
+  uploadedBy        String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  uploader          User                @relation("TournamentUploader", fields: [uploadedBy], references: [id])
+  circles           TournamentCircle[]
+  comments          Comment[]
+}
+
+model TournamentCircle {
+  tournamentId      String
+  circleId          String
+  sharedBy          String
+  sharedAt          DateTime            @default(now())
+  
+  // Relations
+  tournament        Tournament          @relation(fields: [tournamentId], references: [id])
+  circle            Circle              @relation(fields: [circleId], references: [id])
+  sharer            User                @relation("TournamentSharer", fields: [sharedBy], references: [id])
+  
+  @@id([tournamentId, circleId])
+}
+
+model Comment {
+  id                String              @id @default(cuid())
+  content           String
+  tournamentId      String
+  boardNumber       Int                 // References board in PBN file
+  userId            String
+  circleId          String
+  parentCommentId   String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  tournament        Tournament          @relation(fields: [tournamentId], references: [id])
+  user              User                @relation(fields: [userId], references: [id])
+  circle            Circle              @relation(fields: [circleId], references: [id])
+  parent            Comment?            @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies           Comment[]           @relation("CommentReplies")
+}
+
+model CircleInvitation {
+  id                String              @id @default(cuid())
+  circleId          String
+  invitedEmail      String
+  invitedUserId     String?             // Optional - if user exists
+  invitedBy         String
+  status            String              @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED
+  createdAt         DateTime            @default(now())
+  expiresAt         DateTime
+  
+  // Relations
+  circle            Circle              @relation(fields: [circleId], references: [id])
+  inviter           User                @relation("CircleInviter", fields: [invitedBy], references: [id])
+  invitedUser       User?               @relation("CircleInvitee", fields: [invitedUserId], references: [id])
+  
+  @@unique([circleId, invitedEmail])
+}

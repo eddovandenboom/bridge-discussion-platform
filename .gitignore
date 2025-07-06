@@ -1,0 +1,10 @@
+logs/
+.claude/
+node_modules/
+*/node_modules/
+*/dist/
+archive/
+backend/uploads/backups/*
+backend/uploads/tournaments/*
+backend/prisma/*.db
+frontend/public/tournaments/*

@@ -1,0 +1,28 @@
+{
+  "name": "bridge-discussion-simple",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+    "build:prod": "npm run install:all && npm run build && npm run db:setup:prod",
+    "db:setup:prod": "npm run db:generate --workspace=backend && npm run db:push:prod --workspace=backend",
+    "db:push:prod": "npm run db:push:prod --workspace=backend",
+    "db:reset": "npm run db:reset --workspace=backend",
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop ecosystem.config.js",
+    "restart": "pm2 restart ecosystem.config.js",
+    "logs": "pm2 logs",
+    "test": "npm run test --workspace=frontend && npm run test --workspace=backend",
+    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
