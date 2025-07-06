@@ -8,3 +8,4 @@ backend/uploads/backups/*
 backend/uploads/tournaments/*
 backend/prisma/*.db
 frontend/public/tournaments/*
+.env

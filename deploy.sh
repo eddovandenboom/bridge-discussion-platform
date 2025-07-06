@@ -30,8 +30,8 @@ npm run build:prod
 # Set up production database
 echo "🗄️ Setting up production database..."
 cd backend
-DATABASE_URL="file:./prisma/prod.db" npx prisma db push
-#DATABASE_URL="file:./prisma/prod.db" node prisma/seed.js
+npm run db:push:prod
+# npm run db:seed:prod
 cd ..
 
 # Copy environment file if it doesn't exist
@@ -55,7 +55,8 @@ echo "✅ Deployment complete!"
 echo ""
 echo "🌐 Services running:"
 echo "   - Backend API: http://localhost:3001"
-echo "   - Bridge Viewer: http://localhost:3002"
+echo "   - Bridge Hand Viewer: http://localhost:3002"
+echo "   - Frontend: Served as static files (see nginx.conf)"
 echo ""
 echo "📋 Next steps:"
 echo "   1. Configure nginx (see nginx.conf)"
