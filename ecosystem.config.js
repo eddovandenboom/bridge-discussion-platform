@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'bridge-discussion-backend',
       script: 'backend/dist/index.js',
-      cwd: '/home/eddo/Projects/bridge-discussion-simple',
+      cwd: process.env.APP_ROOT,
       instances: 1,
       autorestart: true,
       watch: false,
@@ -11,14 +11,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        DATABASE_URL: 'file:./backend/prisma/prod.db',
-        SESSION_SECRET: process.env.SESSION_SECRET || 'change-this-in-production'
-      },
-      env_production: {
-        NODE_ENV: 'production',
-        PORT: 3001,
-        DATABASE_URL: 'file:./backend/prisma/prod.db',
-        SESSION_SECRET: process.env.SESSION_SECRET || 'change-this-in-production'
+        SESSION_SECRET: process.env.SESSION_SECRET
       },
       error_file: './logs/backend-error.log',
       out_file: './logs/backend-out.log',
@@ -27,9 +20,9 @@ module.exports = {
     },
     {
       name: 'bridge-hand-viewer',
-      script: 'cd /home/eddo/Projects/bridge-hand-viewer && npm start',
-      shell: true,
-      cwd: '/home/eddo/Projects/bridge-hand-viewer',
+      script: 'npm',
+      args: 'run serve:bg',
+      cwd: process.env.BRIDGE_VIEWER_PATH,
       instances: 1,
       autorestart: true,
       watch: false,
