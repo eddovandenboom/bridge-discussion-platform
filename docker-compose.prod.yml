@@ -33,23 +33,6 @@ services:
     command: sh -c "npm install && npm run serve"
     restart: unless-stopped
 
-  caddy:
-    build:
-      context: .
-      dockerfile: Dockerfile.caddy
-    ports:
-      - "8080:80"
-    environment:
-      - NODE_ENV=production
-      - APP_ROOT=/app
-    volumes:
-      - frontend_dist:/app/frontend/dist
-      - ./backend/uploads:/app/backend/uploads
-    depends_on:
-      - backend
-      - frontend
-    restart: unless-stopped
-
   db_setup:
     build: ./backend
     volumes:
