@@ -1,0 +1,65 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:./dev.db
+    volumes:
+      - ./backend/prisma:/app/prisma
+      - ./backend/uploads:/app/uploads
+      - backend_db:/app/prisma
+    depends_on:
+      - db_setup
+
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    command: npm run dev -- --host 0.0.0.0
+
+  bridge-viewer:
+    image: node:18-alpine
+    working_dir: /app
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+    volumes:
+      - ${BRIDGE_VIEWER_PATH:-/tmp}:/app
+    command: sh -c "npm install && npm run serve"
+
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=development
+      - APP_ROOT=/app
+    volumes:
+      - ./frontend/dist:/app/frontend/dist
+      - ./backend/uploads:/app/backend/uploads
+    depends_on:
+      - backend
+      - frontend
+
+  db_setup:
+    build: ./backend
+    environment:
+      - DATABASE_URL=file:./dev.db
+    volumes:
+      - ./backend/prisma:/app/prisma
+      - backend_db:/app/prisma
+    command: sh -c "npx prisma generate && npx prisma db push --force-reset"
+
+volumes:
+  backend_db:

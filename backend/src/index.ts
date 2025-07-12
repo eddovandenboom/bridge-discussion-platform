@@ -13,38 +13,14 @@ dotenv.config({ path: path.join(__dirname, '../../.env') })
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Configure CORS for development and production
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.FRONTEND_URL || 'http://localhost:3000']
-  : ['http://localhost:3000', 'http://127.0.0.1:3000']
-
+// Simple CORS - allow all in development, specific origins in production
 app.use(cors({
-  origin: allowedOrigins,
+  origin: process.env.NODE_ENV === 'development' ? true : [process.env.FRONTEND_URL || 'http://localhost'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: [
-    'Origin', 
-    'X-Requested-With', 
-    'Content-Type', 
-    'Accept', 
-    'Authorization', 
-    'Cache-Control',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Methods'
-  ],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'Cache-Control']
 }))
 
-// Explicit preflight handler
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000')
-  res.header('Access-Control-Allow-Credentials', 'true')
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control')
-  res.sendStatus(204)
-})
 app.use(express.json())
 
 // Session configuration
@@ -93,6 +69,7 @@ app.use('/api/circles', circleRoutes)
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Bridge Discussion API is running' })
 })
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

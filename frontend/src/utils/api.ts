@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Configure axios defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Configure axios defaults - use relative URLs to go through Caddy
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 axios.defaults.withCredentials = true;
 
 // Request interceptor

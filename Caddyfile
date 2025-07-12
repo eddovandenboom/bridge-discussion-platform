@@ -1,0 +1,41 @@
+# Bridge Discussion App - Minimal Caddy Configuration
+:80 {
+    # API endpoints
+    handle /api/* {
+        reverse_proxy backend:3001
+    }
+
+    # Bridge hand viewer
+    handle /viewer/* {
+        reverse_proxy bridge-viewer:3002
+    }
+
+    # Uploads
+    handle /uploads/* {
+        root {$APP_ROOT}/backend
+        file_server
+        header Access-Control-Allow-Origin *
+    }
+
+    # Frontend (dev server or static files)
+    handle {
+        @dev expression {env.NODE_ENV} != "production"
+        handle @dev {
+            reverse_proxy frontend:3000
+        }
+        handle {
+            root {$APP_ROOT}/frontend/dist
+            try_files {path} {path}/ /index.html
+            file_server
+        }
+    }
+
+    # Basic security headers
+    header {
+        X-Frame-Options SAMEORIGIN
+        X-Content-Type-Options nosniff
+        -Server
+    }
+
+    encode gzip
+}
