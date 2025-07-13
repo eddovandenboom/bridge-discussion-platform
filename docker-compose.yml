@@ -5,7 +5,7 @@ services:
       - "3001"
     volumes:
       - ./backend/uploads:/app/uploads
-      - backend_db:/app/prisma
+      - ./backend/prisma:/app/prisma
     depends_on:
       - db_setup
     restart: unless-stopped
@@ -34,7 +34,7 @@ services:
     build: ./backend
     env_file: .env
     volumes:
-      - backend_db:/app/prisma
+      - ./backend/prisma:/app/prisma
     command: sh -c "npx prisma generate && npx prisma db push"
 
   caddy:
@@ -53,5 +53,3 @@ services:
     depends_on:
       - frontend
 
-volumes:
-  backend_db:

@@ -64,12 +64,17 @@ const CirclesPage: React.FC = () => {
     }
   };
 
-  const handleJoinCircle = async (circleId: string) => {
+  const handleRequestToJoin = async (circleId: string) => {
     try {
-      await axios.post(`/api/circles/${circleId}/join`);
+      await axios.post(`/api/circles/${circleId}/request-join`);
+      alert('Your request to join has been sent!');
       fetchCircles();
-    } catch (error) {
-      console.error('Error joining circle:', error);
+    } catch (error: any) {
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        console.error('Error requesting to join circle:', error);
+      }
     }
   };
 
@@ -149,7 +154,7 @@ const CirclesPage: React.FC = () => {
                   onChange={(e) => setNewCircle({ ...newCircle, isPublic: e.target.checked })}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Public circle (anyone can join)</span>
+                <span className="text-sm text-gray-700">Public circle (users can request to join)</span>
               </label>
             </div>
             <div className="flex gap-2">
@@ -214,10 +219,10 @@ const CirclesPage: React.FC = () => {
                     </button>
                   ) : circle.isPublic ? (
                     <button
-                      onClick={() => handleJoinCircle(circle.id)}
+                      onClick={() => handleRequestToJoin(circle.id)}
                       className="bg-blue-100 text-blue-700 px-3 py-1 text-sm rounded hover:bg-blue-200 transition-colors"
                     >
-                      Join
+                      Request to Join
                     </button>
                   ) : (
                     <span className="text-xs text-gray-500">Private</span>

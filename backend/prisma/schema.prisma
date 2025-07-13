@@ -24,6 +24,7 @@ model User {
   sharedTournaments TournamentCircle[]  @relation("TournamentSharer")
   sentInvitations   CircleInvitation[]  @relation("CircleInviter")
   receivedInvitations CircleInvitation[] @relation("CircleInvitee")
+  joinRequests      JoinRequest[]
 }
 
 model Circle {
@@ -41,6 +42,7 @@ model Circle {
   tournaments       TournamentCircle[]
   comments          Comment[]
   invitations       CircleInvitation[]
+  joinRequests      JoinRequest[]
 }
 
 model CircleMember {
@@ -121,4 +123,19 @@ model CircleInvitation {
   invitedUser       User?               @relation("CircleInvitee", fields: [invitedUserId], references: [id])
   
   @@unique([circleId, invitedEmail])
+}
+
+model JoinRequest {
+  id                String              @id @default(cuid())
+  circleId          String
+  userId            String
+  status            String              @default("PENDING") // PENDING, APPROVED, DENIED
+  message           String?             // Optional message from requester
+  createdAt         DateTime            @default(now())
+  
+  // Relations
+  circle            Circle              @relation(fields: [circleId], references: [id])
+  user              User                @relation(fields: [userId], references: [id])
+  
+  @@unique([circleId, userId])
 }

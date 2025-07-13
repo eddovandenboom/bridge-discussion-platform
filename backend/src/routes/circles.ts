@@ -240,10 +240,11 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Join circle
-router.post('/:id/join', async (req, res) => {
+// Request to join public circle
+router.post('/:id/request-join', async (req, res) => {
   try {
     const { id } = req.params;
+    const { message } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -253,7 +254,8 @@ router.post('/:id/join', async (req, res) => {
     const circle = await prisma.circle.findUnique({
       where: { id },
       include: {
-        members: { where: { userId } }
+        members: { where: { userId } },
+        joinRequests: { where: { userId } }
       }
     });
 
@@ -262,26 +264,33 @@ router.post('/:id/join', async (req, res) => {
     }
 
     if (!circle.isPublic) {
-      return res.status(403).json({ error: 'Cannot join private circle' });
+      return res.status(403).json({ error: 'Cannot request to join private circle' });
     }
 
     if (circle.members.length > 0) {
       return res.status(400).json({ error: 'Already a member of this circle' });
     }
 
-    await prisma.circleMember.create({
+    if (circle.joinRequests.length > 0 && circle.joinRequests[0].status === 'PENDING') {
+      return res.status(400).json({ error: 'Join request already pending' });
+    }
+
+    const joinRequest = await prisma.joinRequest.create({
       data: {
         circleId: id,
         userId,
-        role: 'MEMBER', // New members start as regular members
-        joinedAt: new Date()
+        message: message?.trim() || null
+      },
+      include: {
+        user: { select: { id: true, username: true } },
+        circle: { select: { id: true, name: true } }
       }
     });
 
-    res.status(201).json({ message: 'Successfully joined circle' });
+    res.status(201).json(joinRequest);
   } catch (error) {
-    console.error('Error joining circle:', error);
-    res.status(500).json({ error: 'Failed to join circle' });
+    console.error('Error creating join request:', error);
+    res.status(500).json({ error: 'Failed to create join request' });
   }
 });
 
@@ -776,6 +785,183 @@ router.post('/:id/invite', async (req, res) => {
   } catch (error) {
     console.error('Error sending invitation:', error);
     res.status(500).json({ error: 'Failed to send invitation' });
+  }
+});
+
+// Get pending join requests for a circle (creator/admin only)
+router.get('/:id/join-requests', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Check if user is creator or admin
+    const circle = await prisma.circle.findUnique({
+      where: { id },
+      include: {
+        members: {
+          where: { userId }
+        }
+      }
+    });
+
+    if (!circle) {
+      return res.status(404).json({ error: 'Circle not found' });
+    }
+
+    const isCreator = circle.createdBy === userId;
+    const isAdmin = circle.members.some((m: { role: string }) => m.role === 'ADMIN');
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ error: 'Only circle creator or admin can view join requests' });
+    }
+
+    // Get pending join requests
+    const joinRequests = await prisma.joinRequest.findMany({
+      where: {
+        circleId: id,
+        status: 'PENDING'
+      },
+      include: {
+        user: { select: { id: true, username: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(joinRequests);
+  } catch (error) {
+    console.error('Error fetching join requests:', error);
+    res.status(500).json({ error: 'Failed to fetch join requests' });
+  }
+});
+
+// Approve join request (creator/admin only)
+router.post('/join-requests/:requestId/approve', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Get join request
+    const joinRequest = await prisma.joinRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        circle: {
+          include: {
+            members: { where: { userId } }
+          }
+        },
+        user: { select: { id: true, username: true } }
+      }
+    });
+
+    if (!joinRequest) {
+      return res.status(404).json({ error: 'Join request not found' });
+    }
+
+    if (joinRequest.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Join request has already been processed' });
+    }
+
+    // Check if user is creator or admin
+    const isCreator = joinRequest.circle.createdBy === userId;
+    const isAdmin = joinRequest.circle.members.some((m: { role: string }) => m.role === 'ADMIN');
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ error: 'Only circle creator or admin can approve join requests' });
+    }
+
+    // Check if user is already a member
+    const existingMember = await prisma.circleMember.findUnique({
+      where: {
+        circleId_userId: {
+          circleId: joinRequest.circleId,
+          userId: joinRequest.userId
+        }
+      }
+    });
+
+    if (existingMember) {
+      return res.status(400).json({ error: 'User is already a member of this circle' });
+    }
+
+    // Approve request and add to circle
+    await prisma.$transaction([
+      prisma.joinRequest.update({
+        where: { id: requestId },
+        data: { status: 'APPROVED' }
+      }),
+      prisma.circleMember.create({
+        data: {
+          circleId: joinRequest.circleId,
+          userId: joinRequest.userId,
+          role: 'MEMBER'
+        }
+      })
+    ]);
+
+    res.json({ message: `Approved ${joinRequest.user.username} to join ${joinRequest.circle.name}` });
+  } catch (error) {
+    console.error('Error approving join request:', error);
+    res.status(500).json({ error: 'Failed to approve join request' });
+  }
+});
+
+// Deny join request (creator/admin only)
+router.post('/join-requests/:requestId/deny', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Get join request
+    const joinRequest = await prisma.joinRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        circle: {
+          include: {
+            members: { where: { userId } }
+          }
+        },
+        user: { select: { id: true, username: true } }
+      }
+    });
+
+    if (!joinRequest) {
+      return res.status(404).json({ error: 'Join request not found' });
+    }
+
+    if (joinRequest.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Join request has already been processed' });
+    }
+
+    // Check if user is creator or admin
+    const isCreator = joinRequest.circle.createdBy === userId;
+    const isAdmin = joinRequest.circle.members.some((m: { role: string }) => m.role === 'ADMIN');
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ error: 'Only circle creator or admin can deny join requests' });
+    }
+
+    // Deny request
+    await prisma.joinRequest.update({
+      where: { id: requestId },
+      data: { status: 'DENIED' }
+    });
+
+    res.json({ message: `Denied ${joinRequest.user.username}'s request to join ${joinRequest.circle.name}` });
+  } catch (error) {
+    console.error('Error denying join request:', error);
+    res.status(500).json({ error: 'Failed to deny join request' });
   }
 });
 

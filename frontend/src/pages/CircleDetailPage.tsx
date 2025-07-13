@@ -56,6 +56,7 @@ const CircleDetailPage: React.FC = () => {
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [userCircles, setUserCircles] = useState<Array<{id: string, name: string}>>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -68,6 +69,7 @@ const CircleDetailPage: React.FC = () => {
       fetchUserCircles();
       if (id && (isUserCreator() || isUserAdmin())) {
         fetchInvitations();
+        fetchJoinRequests();
       }
     }
   }, [user, circle]);
@@ -115,6 +117,15 @@ const CircleDetailPage: React.FC = () => {
     }
   };
 
+  const fetchJoinRequests = async () => {
+    try {
+      const response = await axios.get(`/api/circles/${id}/join-requests`);
+      setJoinRequests(response.data);
+    } catch (error: any) {
+      console.error('Failed to fetch join requests:', error);
+    }
+  };
+
   const handleUploadSuccess = () => {
     setShowUploadForm(false);
     fetchCircle(); // Refresh circle data to show new tournament
@@ -125,12 +136,36 @@ const CircleDetailPage: React.FC = () => {
     fetchInvitations(); // Refresh invitations list
   };
 
-  const handleJoinCircle = async () => {
+  const handleApproveJoinRequest = async (requestId: string) => {
     try {
-      await axios.post(`/api/circles/${id}/join`);
+      await axios.post(`/api/circles/join-requests/${requestId}/approve`);
+      fetchJoinRequests();
+      fetchCircle(); // Refresh to show new member
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Failed to approve join request');
+    }
+  };
+
+  const handleDenyJoinRequest = async (requestId: string) => {
+    try {
+      await axios.post(`/api/circles/join-requests/${requestId}/deny`);
+      fetchJoinRequests();
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Failed to deny join request');
+    }
+  };
+
+  const handleRequestToJoin = async () => {
+    try {
+      await axios.post(`/api/circles/${id}/request-join`);
+      alert('Your request to join has been sent!');
       fetchCircle();
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to join circle');
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        setError(error.response?.data?.error || 'Failed to request to join circle');
+      }
     }
   };
 
@@ -272,10 +307,10 @@ const CircleDetailPage: React.FC = () => {
                 </button>
               ) : circle.isPublic ? (
                 <button
-                  onClick={handleJoinCircle}
+                  onClick={handleRequestToJoin}
                   className="bg-blue-100 text-blue-700 px-4 py-2 rounded hover:bg-blue-200 transition-colors"
                 >
-                  Join Circle
+                  Request to Join
                 </button>
               ) : (
                 <div className="text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded">
@@ -362,6 +397,44 @@ const CircleDetailPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Pending Join Requests Section (creator/admin only for public circles) */}
+        {circle.isPublic && (isUserCreator() || isUserAdmin()) && joinRequests.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <h3 className="text-lg font-semibold mb-4">Pending Join Requests ({joinRequests.length})</h3>
+            <div className="space-y-2">
+              {joinRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between py-2 px-3 bg-blue-50 rounded">
+                  <div>
+                    <span className="font-medium">{request.user.username}</span>
+                    {request.message && (
+                      <div className="text-sm text-gray-600">
+                        Message: "{request.message}"
+                      </div>
+                    )}
+                    <div className="text-sm text-gray-600">
+                      Requested {new Date(request.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApproveJoinRequest(request.id)}
+                      className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700 transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleDenyJoinRequest(request.id)}
+                      className="bg-red-600 text-white px-3 py-1 text-sm rounded hover:bg-red-700 transition-colors"
+                    >
+                      Deny
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
