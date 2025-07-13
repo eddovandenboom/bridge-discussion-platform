@@ -15,9 +15,7 @@
 
     # Uploads
     handle /uploads/* {
-        root /app/uploads
-        file_server
-        header Access-Control-Allow-Origin *
+        reverse_proxy backend:3001
     }
 
     # Frontend static files
