@@ -1,6 +1,6 @@
 # Bridge Discussion App - Host Caddy Configuration
 
-:80 {
+{$DOMAIN} {
 
     # API endpoints
     handle /api/* {

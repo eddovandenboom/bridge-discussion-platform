@@ -36,10 +36,10 @@ services:
     volumes:
       - backend_db:/app/prisma
     command: sh -c "npx prisma generate && npx prisma db push"
-  
+
   caddy:
     container_name: caddy
-    image: caddy:latest
+    image: docker.io/caddy:latest
     restart: unless-stopped
     ports:
       - "80:80"
