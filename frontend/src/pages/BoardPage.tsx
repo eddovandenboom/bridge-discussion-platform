@@ -241,7 +241,7 @@ export default function BoardPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Board {selectedBoard}</h2>
               <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
                 <BridgeHandViewer
-                  pbnFileUrl={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/uploads/tournaments/${tournament.filename}`}
+                  pbnFileUrl={`/uploads/tournaments/${tournament.filename}`}
                   onBoardChange={(boardNumber) => setSelectedBoard(boardNumber)}
                 />
               </div>
