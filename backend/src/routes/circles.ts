@@ -232,10 +232,29 @@ router.delete('/:id', async (req, res) => {
       return res.status(403).json({ error: 'Only circle creator can delete circle' });
     }
 
-    await prisma.circle.delete({ where: { id } });
+    // Delete circle and all dependent records in a transaction
+    await prisma.$transaction([
+      // Delete all dependent records first
+      prisma.comment.deleteMany({ where: { circleId: id } }),
+      prisma.tournamentCircle.deleteMany({ where: { circleId: id } }),
+      prisma.circleMember.deleteMany({ where: { circleId: id } }),
+      prisma.circleInvitation.deleteMany({ where: { circleId: id } }),
+      prisma.joinRequest.deleteMany({ where: { circleId: id } }),
+      // Finally delete the circle
+      prisma.circle.delete({ where: { id } })
+    ]);
+    
     res.status(204).send();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting circle:', error);
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2003') {
+      return res.status(400).json({ 
+        error: 'Cannot delete circle due to foreign key constraints' 
+      });
+    }
+    
     res.status(500).json({ error: 'Failed to delete circle' });
   }
 });
