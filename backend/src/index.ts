@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3001
 
 // Simple CORS - allow all in development, specific origins in production
 app.use(cors({
-  origin: process.env.NODE_ENV === 'development' ? true : [process.env.FRONTEND_URL || 'http://localhost'],
+  origin: process.env.NODE_ENV === 'development' ? true : process.env.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'Cache-Control']
@@ -23,9 +23,14 @@ app.use(cors({
 
 app.use(express.json())
 
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET must be set');
+}
+
 // Session configuration
+const key = process.env.SESSION_SECRET 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {

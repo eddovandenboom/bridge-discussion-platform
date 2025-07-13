@@ -10,3 +10,4 @@ backend/prisma/*.db
 frontend/public/tournaments/*
 .env
 backend/.env
+docker-compose.override.yml

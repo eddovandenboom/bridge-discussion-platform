@@ -1,27 +1,28 @@
 # Bridge Discussion App - Host Caddy Configuration
-{$DOMAIN} {
+
+:80 {
+
     # API endpoints
     handle /api/* {
-        reverse_proxy localhost:3001
+        reverse_proxy backend:3001
     }
 
     # Bridge hand viewer
     handle /viewer/* {
-        reverse_proxy localhost:3002
+        uri strip_prefix /viewer
+        reverse_proxy bridge-viewer:3002
     }
 
     # Uploads
     handle /uploads/* {
-        root {$APP_ROOT}/backend
+        root /app/uploads
         file_server
         header Access-Control-Allow-Origin *
     }
 
     # Frontend static files
     handle {
-        root {$APP_ROOT}/frontend/dist
-        try_files {path} {path}/ /index.html
-        file_server
+        reverse_proxy frontend:3000
     }
 
     # Basic security headers

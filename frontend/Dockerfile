@@ -9,8 +9,11 @@ RUN npm install
 # Copy source
 COPY . .
 
-# Build
+# Build the frontend
 RUN npm run build
 
-# Caddy will serve the static files via volume mount
-CMD ["echo", "Frontend built - static files ready for Caddy"]
+# Install a simple static file server
+RUN npm install -g serve
+
+# Serve the built files
+CMD ["serve", "-s", "dist", "-l", "3000"]

@@ -20,29 +20,11 @@ cp .env.example .env
 nano .env
 ```
 
-### 2. Install Caddy
-
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update && sudo apt install caddy
-```
-
-### 3. Update Domain in Caddyfile
-
-```bash
-# Replace 'yourdomain.com' with your actual domain
-nano Caddyfile
-```
-
-### 4. Deploy
+### 2. Deploy
 
 ```bash
 # Start Docker services
-docker compose -f docker-compose.prod.yml up -d --build
-
-# Start Caddy (runs on port 80/443 with automatic HTTPS)
-sudo caddy run --config Caddyfile
+docker compose up -d --build
 ```
 
 ## Access
