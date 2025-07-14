@@ -1,10 +1,22 @@
 # Bridge Discussion App - Host Caddy Configuration
 
+(admin) {
+    basic_auth {
+        admin {$DATABASE_ADMIN_PASSWORD_HASH}
+    }
+}
+
 {$DOMAIN} {
 
     # API endpoints
     handle /api/* {
         reverse_proxy backend:3001
+    }
+
+    handle /prisma/* {
+        import admin
+        uri strip_prefix /prisma
+        reverse_proxy prisma-studio:5555
     }
 
     # Bridge hand viewer

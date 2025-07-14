@@ -5,7 +5,7 @@ services:
       - "3001"
     volumes:
       - ./backend/uploads:/app/uploads
-      - ./backend/prisma:/app/prisma
+      - db_data:/app/prisma
     depends_on:
       - db_setup
     restart: unless-stopped
@@ -34,7 +34,7 @@ services:
     build: ./backend
     env_file: .env
     volumes:
-      - ./backend/prisma:/app/prisma
+      - db_data:/app/prisma
     command: sh -c "npx prisma generate && npx prisma db push"
 
   caddy:
@@ -52,4 +52,19 @@ services:
     env_file: .env
     depends_on:
       - frontend
+
+  prisma-studio:
+    build: ./backend
+    working_dir: /app
+    expose:
+      - "5555"
+    volumes:
+      - db_data:/app/prisma
+    command: sh -c "npx prisma studio --port 5555 --hostname 0.0.0.0"
+    env_file: .env
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
 

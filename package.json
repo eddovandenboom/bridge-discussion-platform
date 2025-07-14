@@ -2,10 +2,6 @@
   "name": "bridge-discussion-simple",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "scripts": {
     "dev": "docker compose up -d",
     "dev:build": "docker compose up -d --build",

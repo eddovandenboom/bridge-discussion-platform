@@ -3,8 +3,8 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-RUN npm install
+COPY package*.json ./l
+RUN npm ci
 
 # Copy source
 COPY . .
