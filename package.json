@@ -14,8 +14,5 @@
     "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
     "test": "npm run test --workspace=frontend && npm run test --workspace=backend",
     "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.0"
   }
 }
